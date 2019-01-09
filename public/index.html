@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Demo</title>
+  <style>
+    body {
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+<h1>SocketIO + Traefik = &hearts;</h1>
+
+<p id="hostname"></p>
+
+<div style="display: flex; padding: 0.5em; border: 1px solid; height: 60vh; width: 30vw; flex-direction: column">
+  <input type="text" placeholder="your name" id="name">
+  <div id="messages" style="display: flex; flex: 1; flex-direction: column; overflow-y: auto"></div>
+  <div class="controls" style="display: flex; flex-direction: row">
+    <input id="message" style="flex: 1" type="text" placeholder="message">
+    <button onclick="send()">send</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+<script>
+  const localhost = 'http://localhost';
+  const ws = io.connect(localhost);
+
+  ws.on('connect', () => {
+    console.log('We are connected!');
+  });
+
+  const conversation = document.getElementById('messages');
+  ws.on('who', hostname => {
+    document.getElementById('hostname').innerText = 'Connected to: ' + hostname;
+  });
+
+  ws.on('message', (message) => {
+    const div = document.createElement('div');
+    div.innerHTML = `${ message.author } <em>said</em> ${ message.text }`;
+    conversation.appendChild(div);
+  });
+
+  function send() {
+    const authorElement = document.getElementById('name');
+    const messageElement = document.getElementById('message');
+
+    const message = { author: authorElement.value, text: messageElement.value, };
+
+    ws.emit('message', message);
+    messageElement.value = '';
+  }
+
+</script>
+</body>
+</html>

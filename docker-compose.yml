@@ -1,0 +1,30 @@
+version: "3"
+
+services:
+  redis:
+    image: redis
+
+  traefik:
+    image: traefik
+    command: --web --docker --docker.domain=docker.localhost --logLevel=info
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/null:/traefik.toml
+
+  server:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - REDIS_ENDPOINT=redis
+    depends_on:
+      - redis
+    volumes:
+      - ./:/usr/src/app
+    labels:
+      - "traefik.backend=chat-server"
+      - "traefik.frontend.rule=Host:localhost"
+      - "traefik.backend.loadbalancer.stickiness=true"
